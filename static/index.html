@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1117" />
+  <meta name="color-scheme" content="dark" />
+  <title>Repertório — Envio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #181c27;
+      --border: #2a3142;
+      --text: #e8ecf4;
+      --muted: #8b95a8;
+      --accent: #5865f2;
+      --accent-hover: #4752c4;
+      --success: #3ba55d;
+      --danger: #ed4245;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    html {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: radial-gradient(ellipse 120% 80% at 50% -20%, #1e2340 0%, var(--bg) 55%);
+      color: var(--text);
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+    .wrap {
+      max-width: 520px;
+      width: 100%;
+      margin: 0 auto;
+      padding: max(1.25rem, env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-right, 0px)) max(2rem, env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px));
+    }
+    header {
+      margin-bottom: 1.75rem;
+    }
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0 0 0.35rem;
+      letter-spacing: -0.02em;
+    }
+    header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    form {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: clamp(1rem, 4vw, 1.5rem);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    label span.hint {
+      font-weight: 400;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    input, textarea, select {
+      font: inherit;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.65rem 0.85rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+    }
+    select.louvor-input {
+      cursor: pointer;
+      min-height: max(2.75rem, 44px);
+      width: 100%;
+      max-width: 100%;
+      color-scheme: dark;
+    }
+    textarea { min-height: 88px; resize: vertical; }
+    input[type="date"] {
+      cursor: pointer;
+      min-height: max(2.75rem, 44px);
+      width: 100%;
+      max-width: 100%;
+      color-scheme: dark;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      opacity: 0.85;
+      filter: invert(0.85);
+    }
+    .louvores-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .louvor-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: flex-end;
+    }
+    .louvor-row label {
+      flex: 1;
+      min-width: 0;
+    }
+    .louvor-row .btn-remove {
+      flex-shrink: 0;
+      margin-bottom: 0.05rem;
+      padding: 0.55rem 0.75rem;
+      min-height: 44px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .louvor-row .btn-remove:hover {
+      color: var(--danger);
+      border-color: rgba(237, 66, 69, 0.45);
+    }
+    .btn-add-louvor {
+      align-self: stretch;
+      padding: 0.65rem 1rem;
+      min-height: 44px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      background: transparent;
+      color: var(--accent);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-add-louvor:hover {
+      border-color: var(--accent);
+      background: rgba(88, 101, 242, 0.08);
+    }
+    .row-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 0.25rem;
+    }
+    .row-actions button {
+      width: 100%;
+      min-height: 48px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button.primary {
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      padding: 0.85rem 1.25rem;
+      transition: background 0.15s, transform 0.1s;
+      background: var(--accent);
+      color: #fff;
+      flex: none;
+    }
+    button:active { transform: scale(0.98); }
+    button.primary:hover:not(:disabled) { background: var(--accent-hover); }
+    button.secondary {
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 8px;
+      padding: 0.85rem 1.25rem;
+      transition: background 0.15s, transform 0.1s, color 0.15s, border-color 0.15s;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      flex: none;
+    }
+    button.secondary:hover:not(:disabled) { color: var(--text); border-color: var(--muted); }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+    .status {
+      margin-top: 1rem;
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .status.show { display: block; }
+    .status.ok {
+      background: rgba(59, 165, 93, 0.15);
+      border: 1px solid rgba(59, 165, 93, 0.4);
+      color: #a6e9b8;
+    }
+    .status.err {
+      background: rgba(237, 66, 69, 0.12);
+      border: 1px solid rgba(237, 66, 69, 0.35);
+      color: #ff9a9c;
+    }
+    .preview {
+      margin-top: 1.5rem;
+      padding: 1rem 1.25rem;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: var(--radius);
+      border: 1px dashed var(--border);
+      font-size: 0.85rem;
+      color: var(--muted);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .preview strong { color: var(--text); }
+
+    /* Telas largas: botões lado a lado */
+    @media (min-width: 420px) {
+      .row-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+      .row-actions button {
+        width: auto;
+        flex: 1;
+        min-width: 140px;
+      }
+      .btn-add-louvor {
+        align-self: flex-start;
+        width: auto;
+      }
+    }
+
+    /* Evita zoom automático no foco (iOS Safari) em campos com fonte pequena */
+    @media (max-width: 480px) {
+      input,
+      textarea,
+      select {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Repertório</h1>
+      <p>Preencha e envie para a mídia. Use “Copiar texto para WhatsApp” para colar no grupo, se quiser.</p>
+    </header>
+
+    <form id="form" novalidate>
+      <label>
+        Data do culto
+        <span class="hint">Clique no campo ou no ícone do calendário à direita para escolher a data.</span>
+        <input type="date" name="data_culto" id="data_culto" autocomplete="off" />
+      </label>
+
+      <div class="louvores-block">
+        <span class="hint">Sugestão: 3 louvores. Em cada campo, escolha uma música na lista. Nenhum é obrigatório; use “Adicionar louvor” para incluir mais.</span>
+        <div id="louvores-container"></div>
+        <button type="button" class="btn-add-louvor" id="btnAddLouvor" title="Inclui mais um campo de louvor">+ Adicionar louvor</button>
+      </div>
+
+      <label>
+        Observações
+        <span class="hint">Opcional</span>
+        <textarea name="observacoes" id="observacoes" rows="3" placeholder="Ex.: tom da música, cor da roupa, observações gerais, etc."></textarea>
+      </label>
+      <div class="row-actions">
+        <button type="submit" class="primary" id="btnSend">Enviar para mídia</button>
+        <button type="button" class="secondary" id="btnCopy">Copiar texto para WhatsApp</button>
+      </div>
+    </form>
+
+    <div class="status" id="status" role="status"></div>
+
+    <div class="preview" id="preview" aria-live="polite"></div>
+  </div>
+
+  <script src="/musicais.js"></script>
+  <script>
+    (function () {
+      const container = document.getElementById("louvores-container");
+      let nextIndex = 0;
+
+      function buildLouvorSelect() {
+        var sel = document.createElement("select");
+        sel.className = "louvor-input";
+        sel.setAttribute("aria-label", "Selecione a música do louvor");
+        var empty = document.createElement("option");
+        empty.value = "";
+        empty.textContent = "— Selecione uma música —";
+        sel.appendChild(empty);
+        var list = window.MUSICAS_REPERTORIO;
+        if (!list || !list.length) {
+          var err = document.createElement("option");
+          err.value = "";
+          err.textContent = "(Lista não carregou — recarregue a página)";
+          err.disabled = true;
+          sel.appendChild(err);
+          return sel;
+        }
+        for (var i = 0; i < list.length; i++) {
+          var opt = document.createElement("option");
+          opt.value = list[i];
+          opt.textContent = list[i];
+          sel.appendChild(opt);
+        }
+        return sel;
+      }
+
+      function bindLouvorInputs() {
+        container.querySelectorAll(".louvor-input").forEach(function (el) {
+          el.removeEventListener("input", updatePreview);
+          el.removeEventListener("change", updatePreview);
+          el.addEventListener("input", updatePreview);
+          el.addEventListener("change", updatePreview);
+        });
+      }
+
+      function createLouvorRow(removable) {
+        nextIndex += 1;
+        const n = nextIndex;
+        const row = document.createElement("div");
+        row.className = "louvor-row";
+        row.dataset.louvorSlot = String(n);
+
+        const lab = document.createElement("label");
+        const span = document.createElement("span");
+        span.textContent = "Louvor " + n;
+        const input = buildLouvorSelect();
+        lab.appendChild(span);
+        lab.appendChild(input);
+        row.appendChild(lab);
+
+        if (removable) {
+          const rm = document.createElement("button");
+          rm.type = "button";
+          rm.className = "btn-remove";
+          rm.setAttribute("aria-label", "Remover louvor " + n);
+          rm.textContent = "Remover";
+          rm.addEventListener("click", function () {
+            row.remove();
+            renumberLouvorLabels();
+            updatePreview();
+            bindLouvorInputs();
+          });
+          row.appendChild(rm);
+        }
+
+        container.appendChild(row);
+        bindLouvorInputs();
+      }
+
+      function renumberLouvorLabels() {
+        var rows = container.querySelectorAll(".louvor-row");
+        rows.forEach(function (row, i) {
+          var lab = row.querySelector("label span");
+          if (lab) lab.textContent = "Louvor " + (i + 1);
+        });
+      }
+
+      function initLouvores() {
+        for (var i = 0; i < 3; i++) createLouvorRow(false);
+      }
+
+      document.getElementById("btnAddLouvor").addEventListener("click", function () {
+        createLouvorRow(true);
+        updatePreview();
+      });
+
+      function buildPayload() {
+        var louvores = Array.prototype.map.call(
+          container.querySelectorAll(".louvor-input"),
+          function (inp) {
+            return inp.value.trim();
+          }
+        );
+        return {
+          data_culto: document.getElementById("data_culto").value.trim(),
+          louvores: louvores,
+          observacoes: document.getElementById("observacoes").value.trim(),
+        };
+      }
+
+      function formatDateForDisplay(s) {
+        var v = (s || "").trim();
+        if (!v) return "(sem data)";
+        var m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (m) return m[3] + "/" + m[2] + "/" + m[1];
+        return v;
+      }
+
+      function formatMessage(p) {
+        var data = formatDateForDisplay(p.data_culto);
+        var filled = (p.louvores || []).filter(Boolean);
+        var louvoresFmt = filled.length
+          ? filled.map(function (l) {
+              return "• " + l;
+            }).join("\n")
+          : "• (não informado)";
+        var out =
+          "**Culto** " +
+          data +
+          "\n\n**Repertório**\n" +
+          louvoresFmt;
+        if (p.observacoes) out += "\n\n**Observações:**\n" + p.observacoes;
+        return out;
+      }
+
+      function updatePreview() {
+        var el = document.getElementById("preview");
+        var raw = formatMessage(buildPayload());
+        el.textContent = raw.replace(/\*\*(.*?)\*\*/g, "$1");
+      }
+
+      document.getElementById("data_culto").addEventListener("input", updatePreview);
+      document.getElementById("data_culto").addEventListener("change", updatePreview);
+      document.getElementById("observacoes").addEventListener("input", updatePreview);
+
+      var dataCulto = document.getElementById("data_culto");
+      dataCulto.addEventListener("click", function () {
+        if (typeof this.showPicker === "function") {
+          try {
+            this.showPicker();
+          } catch (_) {}
+        }
+      });
+
+      initLouvores();
+      updatePreview();
+
+      function setStatus(ok, text) {
+        var s = document.getElementById("status");
+        s.className = "status show " + (ok ? "ok" : "err");
+        s.textContent = text;
+      }
+      function hideStatus() {
+        var s = document.getElementById("status");
+        s.className = "status";
+      }
+
+      document.getElementById("form").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        hideStatus();
+        var btn = document.getElementById("btnSend");
+        btn.disabled = true;
+        try {
+          var res = await fetch("/api/repertorio", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(buildPayload()),
+          });
+          var j = await res.json().catch(function () {
+            return {};
+          });
+          if (!res.ok || !j.ok) {
+            setStatus(false, j.error || "Falha ao enviar. Verifique o servidor e o webhook.");
+          } else {
+            setStatus(true, "Enviado para a mídia com sucesso.");
+          }
+        } catch (err) {
+          setStatus(false, "Não foi possível conectar ao servidor. Inicie o app (Python) e tente de novo.");
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
+      document.getElementById("btnCopy").addEventListener("click", async function () {
+        var text = formatMessage(buildPayload()).replace(/\*\*(.*?)\*\*/g, "$1");
+        try {
+          await navigator.clipboard.writeText(text);
+          setStatus(true, "Texto copiado. Cole no WhatsApp.");
+        } catch (e) {
+          setStatus(false, "Não foi possível copiar. Selecione a pré-visualização abaixo manualmente.");
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
