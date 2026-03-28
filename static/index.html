@@ -91,7 +91,8 @@
     input:focus, textarea:focus, select:focus {
       border-color: var(--accent);
     }
-    select.louvor-input {
+    select.louvor-input,
+    .louvor-grid select {
       cursor: pointer;
       min-height: max(2.75rem, 44px);
       width: 100%;
@@ -120,15 +121,55 @@
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
-      align-items: flex-end;
+      align-items: flex-start;
     }
-    .louvor-row label {
+    .louvor-card {
       flex: 1;
       min-width: 0;
+      width: 100%;
+      padding: 0.75rem;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .louvor-title {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0.65rem;
+    }
+    .louvor-grid {
+      display: grid;
+      gap: 0.65rem;
+      width: 100%;
+    }
+    @media (min-width: 480px) {
+      .louvor-grid {
+        grid-template-columns: 1.4fr 1fr 1fr;
+        align-items: end;
+      }
+      .louvor-row {
+        align-items: flex-end;
+      }
+      .louvor-row .btn-remove {
+        margin-top: 1.75rem;
+      }
+    }
+    .louvor-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      min-width: 0;
+    }
+    .louvor-field .field-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
     }
     .louvor-row .btn-remove {
       flex-shrink: 0;
-      margin-bottom: 0.05rem;
+      align-self: flex-end;
+      margin-top: 0;
       padding: 0.55rem 0.75rem;
       min-height: 44px;
       font-size: 0.8rem;
@@ -272,16 +313,27 @@
         <input type="date" name="data_culto" id="data_culto" autocomplete="off" />
       </label>
 
+      <label>
+        Título
+        <input type="text" name="titulo" id="titulo" autocomplete="off" placeholder="Ex.: Culto Radicais, Culto Especial, etc." />
+      </label>
+
       <div class="louvores-block">
-        <span class="hint">Sugestão: 3 louvores. Em cada campo, escolha uma música na lista. Nenhum é obrigatório; use “Adicionar louvor” para incluir mais.</span>
+        <span class="hint">Sugestão: 3 louvores. Escolha a música e, ao lado, o tom e a nota (opcionais). Use “Adicionar louvor” para incluir mais.</span>
         <div id="louvores-container"></div>
         <button type="button" class="btn-add-louvor" id="btnAddLouvor" title="Inclui mais um campo de louvor">+ Adicionar louvor</button>
       </div>
 
       <label>
+        Roupa
+        <span class="hint">Cor e tipo de roupa da equipe (opcional)</span>
+        <input type="text" name="roupa" id="roupa" autocomplete="off" placeholder="Ex.: branco e azul, social escuro, etc." />
+      </label>
+
+      <label>
         Observações
-        <span class="hint">Opcional</span>
-        <textarea name="observacoes" id="observacoes" rows="3" placeholder="Ex.: tom da música, cor da roupa, observações gerais, etc."></textarea>
+        <span class="hint">Opcional — outras observações além da roupa</span>
+        <textarea name="observacoes" id="observacoes" rows="3" placeholder="Ex.: observações gerais sobre o culto, etc."></textarea>
       </label>
       <div class="row-actions">
         <button type="submit" class="primary" id="btnSend">Enviar para mídia</button>
@@ -299,10 +351,12 @@
     (function () {
       const container = document.getElementById("louvores-container");
       let nextIndex = 0;
+      const TONS = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+      const NOTAS = ["Db", "Eb", "Gb", "Ab", "Bb"];
 
       function buildLouvorSelect() {
         var sel = document.createElement("select");
-        sel.className = "louvor-input";
+        sel.className = "louvor-musica-select louvor-input";
         sel.setAttribute("aria-label", "Selecione a música do louvor");
         var empty = document.createElement("option");
         empty.value = "";
@@ -326,8 +380,42 @@
         return sel;
       }
 
+      function buildTomSelect() {
+        var sel = document.createElement("select");
+        sel.className = "louvor-tom louvor-input";
+        sel.setAttribute("aria-label", "Tom");
+        var o0 = document.createElement("option");
+        o0.value = "";
+        o0.textContent = "— Tom —";
+        sel.appendChild(o0);
+        for (var i = 0; i < TONS.length; i++) {
+          var o = document.createElement("option");
+          o.value = TONS[i];
+          o.textContent = TONS[i];
+          sel.appendChild(o);
+        }
+        return sel;
+      }
+
+      function buildNotaSelect() {
+        var sel = document.createElement("select");
+        sel.className = "louvor-nota louvor-input";
+        sel.setAttribute("aria-label", "Nota");
+        var o0 = document.createElement("option");
+        o0.value = "";
+        o0.textContent = "— Nota —";
+        sel.appendChild(o0);
+        for (var i = 0; i < NOTAS.length; i++) {
+          var o = document.createElement("option");
+          o.value = NOTAS[i];
+          o.textContent = NOTAS[i];
+          sel.appendChild(o);
+        }
+        return sel;
+      }
+
       function bindLouvorInputs() {
-        container.querySelectorAll(".louvor-input").forEach(function (el) {
+        container.querySelectorAll(".louvor-row select").forEach(function (el) {
           el.removeEventListener("input", updatePreview);
           el.removeEventListener("change", updatePreview);
           el.addEventListener("input", updatePreview);
@@ -342,13 +430,46 @@
         row.className = "louvor-row";
         row.dataset.louvorSlot = String(n);
 
-        const lab = document.createElement("label");
-        const span = document.createElement("span");
-        span.textContent = "Louvor " + n;
-        const input = buildLouvorSelect();
-        lab.appendChild(span);
-        lab.appendChild(input);
-        row.appendChild(lab);
+        const card = document.createElement("div");
+        card.className = "louvor-card";
+
+        const title = document.createElement("span");
+        title.className = "louvor-title";
+        title.textContent = "Louvor " + n;
+
+        const grid = document.createElement("div");
+        grid.className = "louvor-grid";
+
+        const fMus = document.createElement("label");
+        fMus.className = "louvor-field louvor-field-musica";
+        var lm = document.createElement("span");
+        lm.className = "field-label";
+        lm.textContent = "Música";
+        fMus.appendChild(lm);
+        fMus.appendChild(buildLouvorSelect());
+
+        const fTom = document.createElement("label");
+        fTom.className = "louvor-field louvor-field-tom";
+        var lt = document.createElement("span");
+        lt.className = "field-label";
+        lt.textContent = "Tom";
+        fTom.appendChild(lt);
+        fTom.appendChild(buildTomSelect());
+
+        const fNota = document.createElement("label");
+        fNota.className = "louvor-field louvor-field-nota";
+        var ln = document.createElement("span");
+        ln.className = "field-label";
+        ln.textContent = "Nota";
+        fNota.appendChild(ln);
+        fNota.appendChild(buildNotaSelect());
+
+        grid.appendChild(fMus);
+        grid.appendChild(fTom);
+        grid.appendChild(fNota);
+        card.appendChild(title);
+        card.appendChild(grid);
+        row.appendChild(card);
 
         if (removable) {
           const rm = document.createElement("button");
@@ -372,8 +493,8 @@
       function renumberLouvorLabels() {
         var rows = container.querySelectorAll(".louvor-row");
         rows.forEach(function (row, i) {
-          var lab = row.querySelector("label span");
-          if (lab) lab.textContent = "Louvor " + (i + 1);
+          var t = row.querySelector(".louvor-title");
+          if (t) t.textContent = "Louvor " + (i + 1);
         });
       }
 
@@ -387,15 +508,21 @@
       });
 
       function buildPayload() {
-        var louvores = Array.prototype.map.call(
-          container.querySelectorAll(".louvor-input"),
-          function (inp) {
-            return inp.value.trim();
-          }
-        );
+        var louvores = Array.prototype.map.call(container.querySelectorAll(".louvor-row"), function (row) {
+          var musEl = row.querySelector(".louvor-musica-select");
+          var tomEl = row.querySelector(".louvor-tom");
+          var notaEl = row.querySelector(".louvor-nota");
+          return {
+            musica: musEl ? musEl.value.trim() : "",
+            tom: tomEl ? tomEl.value.trim() : "",
+            nota: notaEl ? notaEl.value.trim() : "",
+          };
+        });
         return {
           data_culto: document.getElementById("data_culto").value.trim(),
+          titulo: document.getElementById("titulo").value.trim(),
           louvores: louvores,
+          roupa: document.getElementById("roupa").value.trim(),
           observacoes: document.getElementById("observacoes").value.trim(),
         };
       }
@@ -408,19 +535,30 @@
         return v;
       }
 
+      function formatLouvorLine(item) {
+        var mus = (item.musica || "").trim();
+        var tom = (item.tom || "").trim();
+        var nota = (item.nota || "").trim();
+        if (!mus && !tom && !nota) return "";
+        var line = "• ";
+        line += mus || "(música não selecionada)";
+        var bits = [];
+        if (tom) bits.push("Tom: " + tom);
+        if (nota) bits.push("Nota: " + nota);
+        if (bits.length) line += " — " + bits.join(" — ");
+        return line;
+      }
+
       function formatMessage(p) {
         var data = formatDateForDisplay(p.data_culto);
-        var filled = (p.louvores || []).filter(Boolean);
-        var louvoresFmt = filled.length
-          ? filled.map(function (l) {
-              return "• " + l;
-            }).join("\n")
-          : "• (não informado)";
-        var out =
-          "**Culto** " +
-          data +
-          "\n\n**Repertório**\n" +
-          louvoresFmt;
+        var titulo = (p.titulo || "").trim();
+        var roupa = (p.roupa || "").trim();
+        var lines = (p.louvores || []).map(formatLouvorLine).filter(Boolean);
+        var louvoresFmt = lines.length ? lines.join("\n") : "• (não informado)";
+        var out = "**Culto** " + data;
+        if (titulo) out += "\n\n**Título:**\n" + titulo;
+        out += "\n\n**Repertório**\n" + louvoresFmt;
+        if (roupa) out += "\n\n**Roupa:**\n" + roupa;
         if (p.observacoes) out += "\n\n**Observações:**\n" + p.observacoes;
         return out;
       }
@@ -433,6 +571,8 @@
 
       document.getElementById("data_culto").addEventListener("input", updatePreview);
       document.getElementById("data_culto").addEventListener("change", updatePreview);
+      document.getElementById("titulo").addEventListener("input", updatePreview);
+      document.getElementById("roupa").addEventListener("input", updatePreview);
       document.getElementById("observacoes").addEventListener("input", updatePreview);
 
       var dataCulto = document.getElementById("data_culto");

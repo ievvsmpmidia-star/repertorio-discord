@@ -20,16 +20,50 @@ def _webhook_urls():
     return [single] if single else []
 
 
-def _louvores_from_payload(data: dict):
+TONS_VALIDOS = frozenset("C C# D D# E F F# G G# A A# B".split())
+NOTAS_VALIDAS = frozenset("Db Eb Gb Ab Bb".split())
+
+
+def _format_louvor_line(item) -> str:
+    if isinstance(item, dict):
+        mus = (item.get("musica") or "").strip()
+        tom = (item.get("tom") or "").strip()
+        if tom and tom not in TONS_VALIDOS:
+            tom = ""
+        nota = (item.get("nota") or "").strip()
+        if nota and nota not in NOTAS_VALIDAS:
+            nota = ""
+        if not mus and not tom and not nota:
+            return ""
+        parts = []
+        if mus:
+            parts.append(mus)
+        else:
+            parts.append("(música não selecionada)")
+        bits = []
+        if tom:
+            bits.append("Tom: %s" % tom)
+        if nota:
+            bits.append("Nota: %s" % nota)
+        line = "• " + parts[0]
+        if bits:
+            line += " — " + " — ".join(bits)
+        return line
+    s = str(item).strip()
+    return ("• %s" % s) if s else ""
+
+
+def _louvores_lines_from_payload(data: dict):
     raw = data.get("louvores")
+    if isinstance(raw, list) and raw and isinstance(raw[0], dict):
+        return [_format_louvor_line(x) for x in raw]
     if isinstance(raw, list):
-        return [str(x).strip() for x in raw if str(x).strip()]
-    # compatibilidade com payloads antigos (louvor_1 … louvor_4)
+        return [("• %s" % str(x).strip()) for x in raw if str(x).strip()]
     out = []
     for i in range(1, 5):
         s = (data.get("louvor_%d" % i) or "").strip()
         if s:
-            out.append(s)
+            out.append("• %s" % s)
     return out
 
 
@@ -42,16 +76,27 @@ def _format_message(data: dict) -> str:
     if m:
         data_culto = f"{m.group(3)}/{m.group(2)}/{m.group(1)}"
 
-    louvores = _louvores_from_payload(data)
-    louvores_fmt = "\n".join("• %s" % l for l in louvores) or "• (não informado)"
+    titulo = (data.get("titulo") or "").strip()
+    roupa = (data.get("roupa") or "").strip()
     obs = (data.get("observacoes") or "").strip()
+
+    louvor_lines = [ln for ln in _louvores_lines_from_payload(data) if ln]
+    louvores_fmt = "\n".join(louvor_lines) or "• (não informado)"
 
     lines = [
         "**Culto** %s" % data_culto,
-        "",
-        "**Repertório**",
-        louvores_fmt,
     ]
+    if titulo:
+        lines.extend(["", "**Título:**", titulo])
+    lines.extend(
+        [
+            "",
+            "**Repertório**",
+            louvores_fmt,
+        ]
+    )
+    if roupa:
+        lines.extend(["", "**Roupa:**", roupa])
     if obs:
         lines.extend(["", "**Observações:**", obs])
     return "\n".join(lines)
