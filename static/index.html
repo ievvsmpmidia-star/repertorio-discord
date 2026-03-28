@@ -123,11 +123,43 @@
       flex: 1;
       min-width: 140px;
     }
-    .titulo-data-row .input-data {
+    .titulo-data-row .input-data-wrap {
+      position: relative;
       flex: 0 0 auto;
-      width: auto;
       min-width: 10.5rem;
       max-width: 100%;
+    }
+    .titulo-data-row .input-data-wrap .input-data {
+      width: 100%;
+      min-width: 10.5rem;
+    }
+    .date-field-placeholder {
+      position: absolute;
+      left: 0.85rem;
+      right: 2.35rem;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: var(--muted);
+      font-size: 1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .input-data-wrap:not(.has-value):not(.is-focused) .input-data {
+      color: transparent;
+    }
+    .input-data-wrap.has-value .input-data,
+    .input-data-wrap.is-focused .input-data {
+      color: var(--text);
+    }
+    .input-data-wrap:not(.has-value):not(.is-focused) .date-field-placeholder {
+      opacity: 1;
+    }
+    .input-data-wrap.has-value .date-field-placeholder,
+    .input-data-wrap.is-focused .date-field-placeholder {
+      opacity: 0;
+      visibility: hidden;
     }
     .louvores-block {
       display: flex;
@@ -334,14 +366,17 @@
           placeholder="Ex.: Culto Radicais, Culto Especial, etc."
           aria-label="Título do culto"
         />
-        <input
-          type="date"
-          name="data_culto"
-          id="data_culto"
-          class="input-data"
-          autocomplete="off"
-          aria-label="Data do culto"
-        />
+        <div class="input-data-wrap" id="data_culto_wrap">
+          <input
+            type="date"
+            name="data_culto"
+            id="data_culto"
+            class="input-data"
+            autocomplete="off"
+            aria-label="Data do culto"
+          />
+          <span class="date-field-placeholder" id="data_culto_placeholder" aria-hidden="true">Data do culto (dd/mm/aaaa)</span>
+        </div>
       </div>
 
       <div class="louvores-block">
@@ -569,14 +604,34 @@
         el.textContent = raw.replace(/\*\*(.*?)\*\*/g, "$1");
       }
 
-      document.getElementById("data_culto").addEventListener("input", updatePreview);
-      document.getElementById("data_culto").addEventListener("change", updatePreview);
+      function syncDatePlaceholder() {
+        var el = document.getElementById("data_culto");
+        var wrap = document.getElementById("data_culto_wrap");
+        if (!el || !wrap) return;
+        wrap.classList.toggle("has-value", !!el.value);
+        wrap.classList.toggle("is-focused", document.activeElement === el);
+      }
+
+      var dataCultoEl = document.getElementById("data_culto");
+      dataCultoEl.addEventListener("input", function () {
+        syncDatePlaceholder();
+        updatePreview();
+      });
+      dataCultoEl.addEventListener("change", function () {
+        syncDatePlaceholder();
+        updatePreview();
+      });
+      dataCultoEl.addEventListener("focus", function () {
+        syncDatePlaceholder();
+      });
+      dataCultoEl.addEventListener("blur", function () {
+        syncDatePlaceholder();
+      });
       document.getElementById("titulo").addEventListener("input", updatePreview);
       document.getElementById("roupa").addEventListener("input", updatePreview);
       document.getElementById("observacoes").addEventListener("input", updatePreview);
 
-      var dataCulto = document.getElementById("data_culto");
-      dataCulto.addEventListener("click", function () {
+      dataCultoEl.addEventListener("click", function () {
         if (typeof this.showPicker === "function") {
           try {
             this.showPicker();
@@ -585,6 +640,7 @@
       });
 
       initLouvores();
+      syncDatePlaceholder();
       updatePreview();
 
       function setStatus(ok, text) {
