@@ -20,20 +20,18 @@ def _webhook_urls():
     return [single] if single else []
 
 
-TONS_VALIDOS = frozenset("C C# D D# E F F# G G# A A# B".split())
-NOTAS_VALIDAS = frozenset("Db Eb Gb Ab Bb".split())
+TOMS_VALIDOS = frozenset(
+    "C C# D D# E F F# G G# A A# B Db Eb Gb Ab Bb".split()
+)
 
 
 def _format_louvor_line(item) -> str:
     if isinstance(item, dict):
         mus = (item.get("musica") or "").strip()
         tom = (item.get("tom") or "").strip()
-        if tom and tom not in TONS_VALIDOS:
+        if tom and tom not in TOMS_VALIDOS:
             tom = ""
-        nota = (item.get("nota") or "").strip()
-        if nota and nota not in NOTAS_VALIDAS:
-            nota = ""
-        if not mus and not tom and not nota:
+        if not mus and not tom:
             return ""
         parts = []
         if mus:
@@ -43,8 +41,6 @@ def _format_louvor_line(item) -> str:
         bits = []
         if tom:
             bits.append("Tom: %s" % tom)
-        if nota:
-            bits.append("Nota: %s" % nota)
         line = "• " + parts[0]
         if bits:
             line += " — " + " — ".join(bits)

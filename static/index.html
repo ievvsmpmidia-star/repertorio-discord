@@ -145,7 +145,7 @@
     }
     @media (min-width: 480px) {
       .louvor-grid {
-        grid-template-columns: 1.4fr 1fr 1fr;
+        grid-template-columns: 1.4fr 1fr;
         align-items: end;
       }
       .louvor-row {
@@ -319,7 +319,7 @@
       </label>
 
       <div class="louvores-block">
-        <span class="hint">Sugestão: 3 louvores. Escolha a música e, ao lado, o tom e a nota (opcionais). Use “Adicionar louvor” para incluir mais.</span>
+        <span class="hint">Sugestão: 3 louvores. Escolha a música e, ao lado, o tom (opcional). Use “Adicionar louvor” para incluir mais.</span>
         <div id="louvores-container"></div>
         <button type="button" class="btn-add-louvor" id="btnAddLouvor" title="Inclui mais um campo de louvor">+ Adicionar louvor</button>
       </div>
@@ -351,8 +351,10 @@
     (function () {
       const container = document.getElementById("louvores-container");
       let nextIndex = 0;
-      const TONS = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-      const NOTAS = ["Db", "Eb", "Gb", "Ab", "Bb"];
+      const TOM_OPCOES = [
+        "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
+        "Db", "Eb", "Gb", "Ab", "Bb",
+      ];
 
       function buildLouvorSelect() {
         var sel = document.createElement("select");
@@ -388,27 +390,10 @@
         o0.value = "";
         o0.textContent = "— Tom —";
         sel.appendChild(o0);
-        for (var i = 0; i < TONS.length; i++) {
+        for (var i = 0; i < TOM_OPCOES.length; i++) {
           var o = document.createElement("option");
-          o.value = TONS[i];
-          o.textContent = TONS[i];
-          sel.appendChild(o);
-        }
-        return sel;
-      }
-
-      function buildNotaSelect() {
-        var sel = document.createElement("select");
-        sel.className = "louvor-nota louvor-input";
-        sel.setAttribute("aria-label", "Nota");
-        var o0 = document.createElement("option");
-        o0.value = "";
-        o0.textContent = "— Nota —";
-        sel.appendChild(o0);
-        for (var i = 0; i < NOTAS.length; i++) {
-          var o = document.createElement("option");
-          o.value = NOTAS[i];
-          o.textContent = NOTAS[i];
+          o.value = TOM_OPCOES[i];
+          o.textContent = TOM_OPCOES[i];
           sel.appendChild(o);
         }
         return sel;
@@ -456,17 +441,8 @@
         fTom.appendChild(lt);
         fTom.appendChild(buildTomSelect());
 
-        const fNota = document.createElement("label");
-        fNota.className = "louvor-field louvor-field-nota";
-        var ln = document.createElement("span");
-        ln.className = "field-label";
-        ln.textContent = "Nota";
-        fNota.appendChild(ln);
-        fNota.appendChild(buildNotaSelect());
-
         grid.appendChild(fMus);
         grid.appendChild(fTom);
-        grid.appendChild(fNota);
         card.appendChild(title);
         card.appendChild(grid);
         row.appendChild(card);
@@ -511,11 +487,9 @@
         var louvores = Array.prototype.map.call(container.querySelectorAll(".louvor-row"), function (row) {
           var musEl = row.querySelector(".louvor-musica-select");
           var tomEl = row.querySelector(".louvor-tom");
-          var notaEl = row.querySelector(".louvor-nota");
           return {
             musica: musEl ? musEl.value.trim() : "",
             tom: tomEl ? tomEl.value.trim() : "",
-            nota: notaEl ? notaEl.value.trim() : "",
           };
         });
         return {
@@ -538,14 +512,10 @@
       function formatLouvorLine(item) {
         var mus = (item.musica || "").trim();
         var tom = (item.tom || "").trim();
-        var nota = (item.nota || "").trim();
-        if (!mus && !tom && !nota) return "";
+        if (!mus && !tom) return "";
         var line = "• ";
         line += mus || "(música não selecionada)";
-        var bits = [];
-        if (tom) bits.push("Tom: " + tom);
-        if (nota) bits.push("Nota: " + nota);
-        if (bits.length) line += " — " + bits.join(" — ");
+        if (tom) line += " — Tom: " + tom;
         return line;
       }
 
