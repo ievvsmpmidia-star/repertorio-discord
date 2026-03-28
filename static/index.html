@@ -112,6 +112,23 @@
       opacity: 0.85;
       filter: invert(0.85);
     }
+    .titulo-data-row {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      align-items: stretch;
+    }
+    .titulo-data-row .input-titulo {
+      flex: 1;
+      min-width: 140px;
+    }
+    .titulo-data-row .input-data {
+      flex: 0 0 auto;
+      width: auto;
+      min-width: 10.5rem;
+      max-width: 100%;
+    }
     .louvores-block {
       display: flex;
       flex-direction: column;
@@ -307,16 +324,25 @@
     </header>
 
     <form id="form" novalidate>
-      <label>
-        Data do culto
-        <span class="hint">Clique no campo ou no ícone do calendário à direita para escolher a data.</span>
-        <input type="date" name="data_culto" id="data_culto" autocomplete="off" />
-      </label>
-
-      <label>
-        Título
-        <input type="text" name="titulo" id="titulo" autocomplete="off" placeholder="Ex.: Culto Radicais, Culto Especial, etc." />
-      </label>
+      <div class="titulo-data-row">
+        <input
+          type="text"
+          name="titulo"
+          id="titulo"
+          class="input-titulo"
+          autocomplete="off"
+          placeholder="Ex.: Culto Radicais, Culto Especial, etc."
+          aria-label="Título do culto"
+        />
+        <input
+          type="date"
+          name="data_culto"
+          id="data_culto"
+          class="input-data"
+          autocomplete="off"
+          aria-label="Data do culto"
+        />
+      </div>
 
       <div class="louvores-block">
         <span class="hint">Sugestão: 3 louvores. Escolha a música e, ao lado, o tom (opcional). Use “Adicionar louvor” para incluir mais.</span>
@@ -520,14 +546,18 @@
       }
 
       function formatMessage(p) {
-        var data = formatDateForDisplay(p.data_culto);
+        var dataRaw = formatDateForDisplay(p.data_culto);
         var titulo = (p.titulo || "").trim();
+        var semData = dataRaw === "(sem data)";
+        var cabecalho;
+        if (titulo && !semData) cabecalho = "**" + titulo + "** · " + dataRaw;
+        else if (titulo) cabecalho = "**" + titulo + "**";
+        else if (!semData) cabecalho = dataRaw;
+        else cabecalho = "(sem data)";
         var roupa = (p.roupa || "").trim();
         var lines = (p.louvores || []).map(formatLouvorLine).filter(Boolean);
         var louvoresFmt = lines.length ? lines.join("\n") : "• (não informado)";
-        var out = "**Culto** " + data;
-        if (titulo) out += "\n\n**Título:**\n" + titulo;
-        out += "\n\n**Repertório**\n" + louvoresFmt;
+        var out = cabecalho + "\n\n**Repertório**\n" + louvoresFmt;
         if (roupa) out += "\n\n**Roupa:**\n" + roupa;
         if (p.observacoes) out += "\n\n**Observações:**\n" + p.observacoes;
         return out;
