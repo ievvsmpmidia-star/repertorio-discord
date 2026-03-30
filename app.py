@@ -1,6 +1,7 @@
 import json
 import re
 import os
+from datetime import date
 import urllib.error
 import urllib.request
 from flask import Flask, request, jsonify, send_from_directory
@@ -65,11 +66,22 @@ def _louvores_lines_from_payload(data: dict):
 
 def _format_message(data: dict) -> str:
     raw_data_culto = (data.get("data_culto") or "").strip()
-    data_culto = raw_data_culto or "(sem data)"
+    if not raw_data_culto:
+        raise ValueError("Data do culto é obrigatória.")
+    data_culto = raw_data_culto
 
     # Input type="date" envia YYYY-MM-DD; o projeto quer exibir DD/MM/AAAA.
     m = re.match(r"^(\d{4})-(\d{2})-(\d{2})$", data_culto)
+    tema_auto = "Culto"
     if m:
+        y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        wd = date(y, mo, d).weekday()  # Mon=0 ... Sun=6
+        if wd == 3:
+            tema_auto = "Culto Quinta"
+        elif wd == 5:
+            tema_auto = "Culto Sabado"
+        elif wd == 6:
+            tema_auto = "Culto Domingo"
         data_culto = f"{m.group(3)}/{m.group(2)}/{m.group(1)}"
 
     titulo = (data.get("titulo") or "").strip()
@@ -77,20 +89,20 @@ def _format_message(data: dict) -> str:
     obs = (data.get("observacoes") or "").strip()
 
     louvor_lines = [ln for ln in _louvores_lines_from_payload(data) if ln]
-    louvores_fmt = "\n".join(louvor_lines) or "• (não informado)"
+    if not louvor_lines:
+        raise ValueError("Pelo menos uma música é obrigatória.")
+    louvores_fmt = "\n".join(louvor_lines)
 
-    sem_data = data_culto == "(sem data)"
-    if titulo and not sem_data:
-        tema = "%s · %s 🎵" % (titulo, data_culto)
-    elif titulo:
-        tema = "%s 🎵" % titulo
-    elif not sem_data:
-        tema = "%s 🎵" % data_culto
+    if titulo:
+        tema = "%s - %s" % (titulo, data_culto)
     else:
-        tema = "(não informado)"
+        tema = "%s - %s" % (tema_auto, data_culto)
+
+    # Discord: negrito no tema inteiro; emoji após a data (fora do negrito).
+    cabecalho = "**%s** 🎵" % tema
 
     lines = [
-        "**Tema do culto:** %s" % tema,
+        cabecalho,
         "",
         "**Repertório**",
         louvores_fmt,
@@ -130,7 +142,10 @@ def enviar_repertorio():
         )
 
     payload = request.get_json(silent=True) or {}
-    content = _format_message(payload)
+    try:
+        content = _format_message(payload)
+    except ValueError as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
     discord_body = {"content": content}
     errors = []
     for url in urls:
@@ -162,3 +177,4 @@ def musicais_js():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=True)
+

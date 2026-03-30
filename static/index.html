@@ -573,10 +573,22 @@
 
       function formatDateForDisplay(s) {
         var v = (s || "").trim();
-        if (!v) return "(sem data)";
+        if (!v) return "";
         var m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
         if (m) return m[3] + "/" + m[2] + "/" + m[1];
         return v;
+      }
+
+      function getCultoTemaByDate(dateRaw) {
+        if (!dateRaw) return "";
+        var m = dateRaw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (!m) return "Culto";
+        var dt = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+        var day = dt.getDay(); // 0=Dom ... 6=Sab
+        if (day === 4) return "Culto Quinta";
+        if (day === 6) return "Culto Sabado";
+        if (day === 0) return "Culto Domingo";
+        return "Culto";
       }
 
       function formatLouvorLine(item) {
@@ -592,19 +604,23 @@
       function formatMessage(p) {
         var dataRaw = formatDateForDisplay(p.data_culto);
         var titulo = (p.titulo || "").trim();
-        var semData = dataRaw === "(sem data)";
         var tema;
-        if (titulo && !semData) tema = titulo + " · " + dataRaw + " 🎵";
-        else if (titulo) tema = titulo + " 🎵";
-        else if (!semData) tema = dataRaw + " 🎵";
-        else tema = "(não informado)";
+        if (titulo && dataRaw) tema = titulo + " - " + dataRaw;
+        else if (dataRaw) tema = getCultoTemaByDate((p.data_culto || "").trim()) + " - " + dataRaw;
+        else tema = "(data obrigatória)";
         var roupa = (p.roupa || "").trim();
         var lines = (p.louvores || []).map(formatLouvorLine).filter(Boolean);
         var louvoresFmt = lines.length ? lines.join("\n") : "• (não informado)";
-        var out = "**Tema do culto:** " + tema + "\n\n**Repertório**\n" + louvoresFmt;
+        var out = "**" + tema + "** 🎵\n\n**Repertório**\n" + louvoresFmt;
         if (roupa) out += "\n\n**Roupa:**\n" + roupa;
         if (p.observacoes) out += "\n\n**Observações:**\n" + p.observacoes;
         return out;
+      }
+
+      function hasAtLeastOneMusic(payload) {
+        return (payload.louvores || []).some(function (item) {
+          return !!(item && (item.musica || "").trim());
+        });
       }
 
       function updatePreview() {
@@ -665,13 +681,22 @@
       document.getElementById("form").addEventListener("submit", async function (e) {
         e.preventDefault();
         hideStatus();
+        var payload = buildPayload();
+        if (!payload.data_culto) {
+          setStatus(false, "Data do culto é obrigatória para enviar.");
+          return;
+        }
+        if (!hasAtLeastOneMusic(payload)) {
+          setStatus(false, "Pelo menos uma música é obrigatória para enviar.");
+          return;
+        }
         var btn = document.getElementById("btnSend");
         btn.disabled = true;
         try {
           var res = await fetch("/api/repertorio", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(buildPayload()),
+            body: JSON.stringify(payload),
           });
           var j = await res.json().catch(function () {
             return {};
@@ -689,7 +714,16 @@
       });
 
       document.getElementById("btnCopy").addEventListener("click", async function () {
-        var text = formatMessage(buildPayload()).replace(/\*\*(.*?)\*\*/g, "$1");
+        var payload = buildPayload();
+        if (!payload.data_culto) {
+          setStatus(false, "Data do culto é obrigatória para copiar.");
+          return;
+        }
+        if (!hasAtLeastOneMusic(payload)) {
+          setStatus(false, "Pelo menos uma música é obrigatória para copiar.");
+          return;
+        }
+        var text = formatMessage(payload).replace(/\*\*(.*?)\*\*/g, "$1");
         try {
           await navigator.clipboard.writeText(text);
           setStatus(true, "Texto copiado. Cole no WhatsApp.");
@@ -701,3 +735,4 @@
   </script>
 </body>
 </html>
+
