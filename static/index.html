@@ -623,6 +623,11 @@
         });
       }
 
+      /** Discord usa **negrito**; WhatsApp usa *negrito* */
+      function discordBoldToWhatsApp(s) {
+        return s.replace(/\*\*(.+?)\*\*/g, "*$1*");
+      }
+
       function updatePreview() {
         var el = document.getElementById("preview");
         var raw = formatMessage(buildPayload());
@@ -723,7 +728,7 @@
           setStatus(false, "Pelo menos uma música é obrigatória para copiar.");
           return;
         }
-        var text = formatMessage(payload).replace(/\*\*(.*?)\*\*/g, "$1");
+        var text = discordBoldToWhatsApp(formatMessage(payload));
         try {
           await navigator.clipboard.writeText(text);
           setStatus(true, "Texto copiado. Cole no WhatsApp.");
