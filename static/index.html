@@ -380,7 +380,7 @@
       </div>
 
       <div class="louvores-block">
-        <span class="hint">Sugestão: 3 louvores. Escolha a música e, ao lado, o tom (opcional). Use “Adicionar louvor” para incluir mais.</span>
+        <span class="hint">Sugestão: 3 louvores. Escolha na lista ou digite a música manualmente. O tom é opcional.</span>
         <div id="louvores-container"></div>
         <button type="button" class="btn-add-louvor" id="btnAddLouvor" title="Inclui mais um campo de louvor">+ Adicionar louvor</button>
       </div>
@@ -461,7 +461,7 @@
       }
 
       function bindLouvorInputs() {
-        container.querySelectorAll(".louvor-row select").forEach(function (el) {
+        container.querySelectorAll(".louvor-row select, .louvor-musica-livre").forEach(function (el) {
           el.removeEventListener("input", updatePreview);
           el.removeEventListener("change", updatePreview);
           el.addEventListener("input", updatePreview);
@@ -493,6 +493,12 @@
         lm.textContent = "Música";
         fMus.appendChild(lm);
         fMus.appendChild(buildLouvorSelect());
+        var musLivre = document.createElement("input");
+        musLivre.type = "text";
+        musLivre.className = "louvor-musica-livre";
+        musLivre.autocomplete = "off";
+        musLivre.placeholder = "Ou digite a música (caso não esteja na lista)";
+        fMus.appendChild(musLivre);
 
         const fTom = document.createElement("label");
         fTom.className = "louvor-field louvor-field-tom";
@@ -547,9 +553,12 @@
       function buildPayload() {
         var louvores = Array.prototype.map.call(container.querySelectorAll(".louvor-row"), function (row) {
           var musEl = row.querySelector(".louvor-musica-select");
+          var musLivreEl = row.querySelector(".louvor-musica-livre");
           var tomEl = row.querySelector(".louvor-tom");
+          var musicaLivre = musLivreEl ? musLivreEl.value.trim() : "";
+          var musicaLista = musEl ? musEl.value.trim() : "";
           return {
-            musica: musEl ? musEl.value.trim() : "",
+            musica: musicaLivre || musicaLista,
             tom: tomEl ? tomEl.value.trim() : "",
           };
         });
@@ -584,15 +593,15 @@
         var dataRaw = formatDateForDisplay(p.data_culto);
         var titulo = (p.titulo || "").trim();
         var semData = dataRaw === "(sem data)";
-        var cabecalho;
-        if (titulo && !semData) cabecalho = "**" + titulo + "** · " + dataRaw;
-        else if (titulo) cabecalho = "**" + titulo + "**";
-        else if (!semData) cabecalho = dataRaw;
-        else cabecalho = "(sem data)";
+        var tema;
+        if (titulo && !semData) tema = titulo + " · " + dataRaw + " 🎵";
+        else if (titulo) tema = titulo + " 🎵";
+        else if (!semData) tema = dataRaw + " 🎵";
+        else tema = "(não informado)";
         var roupa = (p.roupa || "").trim();
         var lines = (p.louvores || []).map(formatLouvorLine).filter(Boolean);
         var louvoresFmt = lines.length ? lines.join("\n") : "• (não informado)";
-        var out = cabecalho + "\n\n**Repertório**\n" + louvoresFmt;
+        var out = "**Tema do culto:** " + tema + "\n\n**Repertório**\n" + louvoresFmt;
         if (roupa) out += "\n\n**Roupa:**\n" + roupa;
         if (p.observacoes) out += "\n\n**Observações:**\n" + p.observacoes;
         return out;

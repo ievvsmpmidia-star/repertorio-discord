@@ -81,16 +81,16 @@ def _format_message(data: dict) -> str:
 
     sem_data = data_culto == "(sem data)"
     if titulo and not sem_data:
-        cabecalho = "**%s** · %s" % (titulo, data_culto)
+        tema = "%s · %s 🎵" % (titulo, data_culto)
     elif titulo:
-        cabecalho = "**%s**" % titulo
+        tema = "%s 🎵" % titulo
     elif not sem_data:
-        cabecalho = data_culto
+        tema = "%s 🎵" % data_culto
     else:
-        cabecalho = "(sem data)"
+        tema = "(não informado)"
 
     lines = [
-        cabecalho,
+        "**Tema do culto:** %s" % tema,
         "",
         "**Repertório**",
         louvores_fmt,
